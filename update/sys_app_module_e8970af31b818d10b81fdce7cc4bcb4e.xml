@@ -18,6 +18,8 @@
         <query>/x/58872/needit-experience/home</query>
         <report/>
         <roles>x_58872_needit.needit_user,x_58872_needit.admin</roles>
+        <survey/>
+        <survey_overwrite>true</survey_overwrite>
         <sys_class_name>sys_app_module</sys_class_name>
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2022-01-21 14:16:15</sys_created_on>

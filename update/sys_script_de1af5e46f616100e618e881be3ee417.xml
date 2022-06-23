@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update sys_domain="global" table="sys_script">
+    <sys_script action="INSERT_OR_UPDATE">
+        <abort_action>false</abort_action>
+        <access/>
+        <action_delete>false</action_delete>
+        <action_insert>true</action_insert>
+        <action_query>false</action_query>
+        <action_update>false</action_update>
+        <active>true</active>
+        <add_message>false</add_message>
+        <advanced>true</advanced>
+        <change_fields>false</change_fields>
+        <client_callable>false</client_callable>
+        <collection>sys_email</collection>
+        <condition/>
+        <description/>
+        <execute_function>false</execute_function>
+        <filter_condition/>
+        <is_rest>false</is_rest>
+        <message/>
+        <name>(ASP) Send Attachments in Email</name>
+        <order>100</order>
+        <priority>100</priority>
+        <rest_method/>
+        <rest_method_text/>
+        <rest_service/>
+        <rest_service_text/>
+        <rest_variables/>
+        <role_conditions/>
+        <script><![CDATA[/******NHA: 20140606 This Business Rule will be triggered before an email is sent out from the incident record. In the related List the user will select if the attachment should be sent or not. The ones which are selected, will be queried in this business rule and a copy to the sys_email table will be created.
+*******/
+
+init(); 
+
+function init()
+{
+    var emailLog = new GlideRecord('sys_email_log'); 
+    emailLog.addQuery('source', current.sys_id); 
+    emailLog.query(); 
+    
+    while (emailLog.next())
+    {   // sort out which email notifications will be concerned with this business rule
+        if (emailLog.notification == '30d439826f81ed00e618e881be3ee4a7')  //(ASP) INC Email to external group
+        { 
+            copyAttachment(); 
+			setExportFalse(); 
+            break; 
+        }
+		else if (emailLog.notification == '8d275b2d6f782140b4892e82be3ee4d7' || emailLog.notification == '337e9af155c1a000f5b738f21114f4e7' || emailLog.notification == '31d416aa0a0a3c18000720749b013fef')
+		{
+			copyAttachment(); 
+            break; 
+		}
+    }
+}
+
+function copyAttachment() 
+{
+    try 
+    {
+        var arrayAttachment = GlideSysAttachment.copy('incident', current.instance.toString(), 'sys_email', current.sys_id);
+        
+        for ( var i = 0; i < arrayAttachment.size(); i++) 
+        {
+            var attachmentSidsPiece = String(arrayAttachment.get(i)).split(',');
+            var sourceAttachmentSysId = attachmentSidsPiece[0];
+            var targetAttachmentSysId = attachmentSidsPiece[1];
+
+            var sourceRec = new GlideRecord("sys_attachment");
+            var targetRec = new GlideRecord("sys_attachment");
+            
+            if ((sourceRec.get("sys_id", sourceAttachmentSysId)) && (targetRec.get("sys_id", targetAttachmentSysId))) 
+            {
+                if (sourceRec.u_send == false) 
+                {
+                // to delete all other attachments copied to the target
+                    targetRec.deleteRecord();
+                }
+            }
+        }
+    }   
+    catch(exception) 
+    {
+      gs.logWarning('Error in the Business Rule <copyAttachment>: ' + exception, '*** Script');
+    }
+}
+
+function setExportFalse()
+{
+	//make other export.pdf files send false
+	var att = new GlideRecord('sys_attachment'); 
+	att.addQuery('table_sys_id', current.instance.toString()); 
+	att.addQuery('u_send', true);
+	att.addQuery('file_name', 'STARTSWITH', 'export'); 
+	att.addQuery('file_name', 'ENDSWITH', 'pdf'); 
+	att.query(); 
+	
+	if (att.next())
+	{
+		//gs.logWarning('set send = false: ' + att.file_name); 
+		att.u_send = false; 
+		att.update(); 
+	}
+}]]></script>
+        <sys_class_name>sys_script</sys_class_name>
+        <sys_created_by>nina.hartenberger_SHARE</sys_created_by>
+        <sys_created_on>2014-06-23 12:51:32</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>de1af5e46f616100e618e881be3ee417</sys_id>
+        <sys_mod_count>14</sys_mod_count>
+        <sys_name>(ASP) Send Attachments in Email</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="NeedIt" source="x_58872_needit">6ead8e780f603200cd674f8ce1050ed1</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="NeedIt">6ead8e780f603200cd674f8ce1050ed1</sys_scope>
+        <sys_update_name>sys_script_de1af5e46f616100e618e881be3ee417</sys_update_name>
+        <sys_updated_by>nina.hartenberger_SHARE</sys_updated_by>
+        <sys_updated_on>2014-06-24 06:55:21</sys_updated_on>
+        <template/>
+        <when>before</when>
+    </sys_script>
+    <sys_translated_text action="delete_multiple" query="documentkey=de1af5e46f616100e618e881be3ee417"/>
+</record_update>
